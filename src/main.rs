@@ -1,10 +1,11 @@
 use std::ops::DerefMut;
 
-use axum::{extract::State, response::IntoResponse, routing::get, Json, Router};
+use axum::{extract::State, routing::get, Json, Router};
 use dotenvy::dotenv;
 use error::AppError;
+use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, Pool, Sqlite, SqlitePool};
+use sqlx::{query, query_as, Pool, Sqlite, SqlitePool};
 use tokio::net::TcpListener;
 
 mod error;
@@ -42,19 +43,34 @@ struct AppState {
 
 #[derive(Serialize, Deserialize)]
 struct Note {
+    #[serde(default)]
     id: String,
     title: String,
     body: Option<String>,
 }
 
-#[axum::debug_handler]
 async fn get_all_notes(State(state): State<AppState>) -> AppResult<Json<Vec<Note>>> {
     let mut db = state.db.acquire().await?;
     let db = db.deref_mut();
     let res = query_as!(Note, "SELECT * FROM notes").fetch_all(db).await?;
+    tracing::info!("📝 Got {} notes", res.len());
     Ok(Json(res))
 }
 
-async fn add_note() -> impl IntoResponse {
-    "hello add note"
+async fn add_note(
+    State(state): State<AppState>,
+    Json(payload): Json<Note>,
+) -> AppResult<Json<Note>> {
+    let mut db = state.db.acquire().await?;
+    let db = db.deref_mut();
+    let id = nanoid!();
+    let query = query!(
+        "INSERT INTO notes (id, title, body) VALUES (?, ?, ?)",
+        id,
+        payload.title,
+        payload.body
+    );
+    query.execute(db).await?;
+    tracing::info!("✨ Added note with id {}", id);
+    Ok(Json(Note { id, ..payload }))
 }

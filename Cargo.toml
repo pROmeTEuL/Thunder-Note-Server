@@ -5,11 +5,12 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.90"
-axum = { version = "0.7.7", features = ["tracing"] }
+axum = { version = "0.7.7", features = ["macros", "tracing"] }
 dotenvy = "0.15.7"
 envy = "0.4.2"
 serde = { version = "1.0.211", features = ["derive"] }
-sqlx = { version = "0.8.2", features = ["json", "runtime-tokio", "sqlite"] }
+serde_json = "1.0.132"
+sqlx = { version = "0.8.2", features = ["derive", "json", "runtime-tokio", "sqlite"] }
 tokio = { version = "1.41.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"

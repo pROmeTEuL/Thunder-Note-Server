@@ -1,10 +1,13 @@
-use std::env;
+use std::ops::DerefMut;
 
-use axum::{response::IntoResponse, routing::get, Router};
+use axum::{extract::State, response::IntoResponse, routing::get, Json, Router};
 use dotenvy::dotenv;
-use serde::Deserialize;
-use sqlx::{Pool, Sqlite, SqlitePool};
-use tokio::net::{unix::SocketAddr, TcpListener};
+use error::AppError;
+use serde::{Deserialize, Serialize};
+use sqlx::{query_as, Pool, Sqlite, SqlitePool};
+use tokio::net::TcpListener;
+
+mod error;
 
 #[derive(Deserialize)]
 struct Config {
@@ -20,7 +23,7 @@ async fn main() -> anyhow::Result<()> {
     let pool = SqlitePool::connect(&config.database_url).await?;
 
     let app = Router::new()
-        .route("/", get(get_note).post(add_note))
+        .route("/", get(get_all_notes).post(add_note))
         .with_state(AppState { db: pool });
 
     let tcp = TcpListener::bind(config.listen_addr).await?;
@@ -30,13 +33,26 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+type AppResult<T> = Result<T, AppError>;
+
 #[derive(Debug, Clone)]
 struct AppState {
     db: Pool<Sqlite>,
 }
 
-async fn get_note() -> impl IntoResponse {
-    "hello get note"
+#[derive(Serialize, Deserialize)]
+struct Note {
+    id: String,
+    title: String,
+    body: Option<String>,
+}
+
+#[axum::debug_handler]
+async fn get_all_notes(State(state): State<AppState>) -> AppResult<Json<Vec<Note>>> {
+    let mut db = state.db.acquire().await?;
+    let db = db.deref_mut();
+    let res = query_as!(Note, "SELECT * FROM notes").fetch_all(db).await?;
+    Ok(Json(res))
 }
 
 async fn add_note() -> impl IntoResponse {

@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.7.7"
-sqlx = { version = "0.8.2", features = ["json"] }
+anyhow = "1.0.90"
+axum = { version = "0.7.7", features = ["tracing"] }
+dotenvy = "0.15.7"
+envy = "0.4.2"
+serde = { version = "1.0.211", features = ["derive"] }
+sqlx = { version = "0.8.2", features = ["json", "runtime-tokio", "sqlite"] }
 tokio = { version = "1.41.0", features = ["full"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"

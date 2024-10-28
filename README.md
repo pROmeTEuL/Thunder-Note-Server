@@ -40,7 +40,6 @@ This starts the app at `http://localhost:8000`.
     "body": "string (optional)"
   }
   ```
-- **Response**: JSON object of the created note with `id`, `title`, `body`, and `date`.
 
 ### GET /[id]
 
@@ -59,9 +58,9 @@ This starts the app at `http://localhost:8000`.
   ```
 - **Response**: JSON object of the updated note with `id`, `title`, `body`, and `date`.
 
-### DELETE /[id] (Unimplemented)
+### DELETE /[id]
 
-- **Description**: Delete a note by `id` (functionality not yet implemented).
+- **Description**: Delete a note by `id`.
 
 ## Configuration
 

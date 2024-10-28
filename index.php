@@ -1,6 +1,31 @@
 <?php
+$db_arg = "dbname=thunder_note host=127.0.0.1";
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$pathComponents = explode('/', trim($path, '/'));
+$id = isset($pathComponents[0]) && is_numeric($pathComponents[0]) ? (int)$pathComponents[0] : null;
+if ($id !== null) {
+    $db = pg_connect($db_arg);
+    if (!$db) {
+        header('HTTP/1.0 500 Internal Server Error');
+        exit;
+    }
+    $result = pg_query($db, "SELECT * FROM notes WHERE id = $id");
+    $resultArr = pg_fetch_all($result);
+    if (empty($resultArr)) {
+        header('HTTP/1.0 404 Not Found');
+        exit;
+    }
+    $json = json_encode($resultArr[0]);
+    if ($json !== false) {
+        header('HTTP/1.0 200 OK');
+        echo $json;
+    } else {
+        header('HTTP/1.0 500 Internal Server Error');
+    }
+    exit;
+}
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    $db = pg_connect("dbname=thunder_note host=127.0.0.1 user=postgres");
+    $db = pg_connect($db_arg);
     if (!$db) {
         header('HTTP/1.0 500 Internal Server Error');
         exit;
@@ -25,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         header('HTTP/1.0 400 Bad Request');
         exit;
     }
-    $db = pg_connect("dbname=thunder_note host=127.0.0.1 user=postgres");
+    $db = pg_connect($db_arg);
     if (!$db) {
         header('HTTP/1.0 500 Internal Server Error');
         exit;

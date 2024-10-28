@@ -1,28 +1,80 @@
 <?php
-$db_arg = "dbname=thunder_note host=127.0.0.1";
+$config = parse_ini_file('/home/radu/work/Thunder-Note-Server/settings.conf');
+if ($config === false) {
+    header('HTTP/1.0 500 Internal Server Error');
+    exit;
+}
+if (!isset($config['user'])) {
+    header('HTTP/1.0 500 Internal Server Error');
+    exit;
+}
+if (isset($config['password'])) {
+    $db_arg = "dbname=thunder_note host=127.0.0.1 user={$config['user']} password={$config['password']}";
+} else {
+    $db_arg = "dbname=thunder_note host=127.0.0.1 user={$config['user']}";
+}
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $pathComponents = explode('/', trim($path, '/'));
 $id = isset($pathComponents[0]) && is_numeric($pathComponents[0]) ? (int)$pathComponents[0] : null;
 if ($id !== null) {
-    $db = pg_connect($db_arg);
-    if (!$db) {
-        header('HTTP/1.0 500 Internal Server Error');
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        $db = pg_connect($db_arg);
+        if (!$db) {
+            header('HTTP/1.0 500 Internal Server Error');
+            exit;
+        }
+        $result = pg_query($db, "SELECT * FROM notes WHERE id = $id");
+        $resultArr = pg_fetch_all($result);
+        if (empty($resultArr)) {
+            header('HTTP/1.0 404 Not Found');
+            exit;
+        }
+        $json = json_encode($resultArr[0]);
+        if ($json !== false) {
+            header('HTTP/1.0 200 OK');
+            echo $json;
+        } else {
+            header('HTTP/1.0 500 Internal Server Error');
+        }
         exit;
-    }
-    $result = pg_query($db, "SELECT * FROM notes WHERE id = $id");
-    $resultArr = pg_fetch_all($result);
-    if (empty($resultArr)) {
-        header('HTTP/1.0 404 Not Found');
+    } else if ($_SERVER['REQUEST_METHOD'] == 'PUT') {
+        $db = pg_connect($db_arg);
+        if (!$db) {
+            header('HTTP/1.0 500 Internal Server Error');
+            exit;
+        }
+        $body = stream_get_contents(fopen('php://input', 'r'));
+        if (empty($body)) {
+            header('HTTP/1.0 400 Bad Request');
+            exit;
+        }
+        $json = json_decode($body, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            header('HTTP/1.0 400 Bad Request');
+            exit;
+        }
+        $currentDate = date('Y-m-d H:i:s');
+        $result = pg_query($db, "UPDATE notes SET title = '{$json['title']}', body = '{$json['body']}', date = '$currentDate' WHERE id = $id");
+        if ($result) {
+            header('HTTP/1.0 200 OK');
+        } else {
+            header('HTTP/1.0 500 Internal Server Error');
+        }
         exit;
-    }
-    $json = json_encode($resultArr[0]);
-    if ($json !== false) {
-        header('HTTP/1.0 200 OK');
-        echo $json;
-    } else {
-        header('HTTP/1.0 500 Internal Server Error');
-    }
-    exit;
+    }/* else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+        $db = pg_connect($db_arg);
+        if (!$db) {
+            header('HTTP/1.0 500 Internal Server Error');
+            exit;
+        }
+        $result = pg_query($db, "DELETE FROM notes WHERE id = $id");
+        if ($result) {
+            header('HTTP/1.0 200 OK');
+        } else {
+            header('HTTP/1.0 500 Internal Server Error');
+        }
+        exit;
+    }*/
 }
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     $db = pg_connect($db_arg);

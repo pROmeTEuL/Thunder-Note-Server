@@ -61,7 +61,7 @@ if ($id !== null) {
             header('HTTP/1.0 500 Internal Server Error');
         }
         exit;
-    }/* else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+    } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
         $db = pg_connect($db_arg);
         if (!$db) {
             header('HTTP/1.0 500 Internal Server Error');
@@ -74,7 +74,7 @@ if ($id !== null) {
             header('HTTP/1.0 500 Internal Server Error');
         }
         exit;
-    }*/
+    }
 }
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     $db = pg_connect($db_arg);

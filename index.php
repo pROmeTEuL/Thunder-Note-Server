@@ -1,5 +1,5 @@
 <?php
-$config = parse_ini_file('/home/radu/work/Thunder-Note-Server/settings.conf');
+$config = parse_ini_file('../../settings.conf');
 if ($config === false) {
     header('HTTP/1.0 500 Internal Server Error');
     exit;

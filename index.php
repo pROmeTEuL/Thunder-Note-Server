@@ -53,7 +53,7 @@ if ($id !== null) {
             header('HTTP/1.0 400 Bad Request');
             exit;
         }
-        $currentDate = date('Y-m-d H:i:s');
+        $currentDate = date('Y-m-d H:i');
         $result = pg_query($db, "UPDATE notes SET title = '{$json['title']}', body = '{$json['body']}', date = '$currentDate' WHERE id = $id");
         if ($result) {
             header('HTTP/1.0 200 OK');
@@ -107,9 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         header('HTTP/1.0 500 Internal Server Error');
         exit;
     }
+
     printf("title: %s\n", $json['title']);
     printf("body: %s\n", $json['body']);
-    $result = pg_query($db, "insert into notes (title, body) values ('{$json['title']}', '{$json['body']}')");
+    $currentDate = date('Y-m-d H:i');
+    $result = pg_query($db, "insert into notes (title, body, date) values ('{$json['title']}', '{$json['body']}', '$currentDate')");
     if ($result) {
         header('HTTP/1.0 200 OK');
     } else {

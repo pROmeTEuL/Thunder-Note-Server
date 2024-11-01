@@ -1,5 +1,5 @@
 <?php
-$config = parse_ini_file('/home/radu/work/Thunder-Note-Server/settings.conf');
+$config = parse_ini_file('../../../settings.conf');
 if ($config === false) {
     header('HTTP/1.0 500 Internal Server Error');
     exit;
@@ -15,7 +15,7 @@ if (isset($config['password'])) {
 }
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $pathComponents = explode('/', trim($path, '/'));
-$id = isset($pathComponents[0]) && is_numeric($pathComponents[0]) ? (int)$pathComponents[0] : null;
+$id = isset($pathComponents[3]) && is_numeric($pathComponents[3]) ? (int)$pathComponents[3] : null;
 if ($id !== null) {
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $db = pg_connect($db_arg);
